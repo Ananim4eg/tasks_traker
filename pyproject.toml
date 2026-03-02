@@ -1,0 +1,17 @@
+[project]
+name = "tasks-traker"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Ananim4eg",email = "109145711+Ananim4eg@users.noreply.github.com"}
+]
+requires-python = ">=3.12.10"
+dependencies = [
+    "flake8 (>=7.3.0,<8.0.0)",
+    "django (>=6.0.2,<7.0.0)",
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
