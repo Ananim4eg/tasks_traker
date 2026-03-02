@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "drf_yasg",
     "users",
+    "task",
+
 ]
 
 MIDDLEWARE = [
@@ -109,5 +111,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+
+STATIC_ROOT = BASE_DIR / "static/"
 
 CELERY_TIMEZONE = "Europe/Moscow"
