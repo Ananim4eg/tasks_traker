@@ -27,7 +27,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_description="Создание",
-        operation_summary="habit_create",
+        operation_summary="task_create",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -56,7 +56,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                     description="Описание задания",
                 ),
             },
-            required=["title", "task_manager", "executor", "task_description"],
+            required=["title", "executor", "task_description"],
         ),
         responses={
             "201": openapi.Response(

@@ -23,11 +23,23 @@ class RegisterView(APIView):
                 "confirm_password": openapi.Schema(
                     type=openapi.TYPE_STRING, description="Подтверждение пароля"
                 ),
+                "first_name": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Имя"
+                ),
+                "last_name": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Фамилия"
+                ),
+                "patronymic": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Отчество"
+                ),
                 "work_position": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Подтверждение пароля"
+                    type=openapi.TYPE_STRING, description="Должность"
+                ),
+                "department": openapi.Schema(
+                    type=openapi.TYPE_STRING, description="Подразделение"
                 ),
             },
-            required=["email", "password", "confirm_password", "work_position"],
+            required=["email", "password", "confirm_password", "first_name", "last_name", "patronymic", "work_position"],
         ),
         responses={
             201: openapi.Response(description="1"),

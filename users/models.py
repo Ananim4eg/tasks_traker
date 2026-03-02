@@ -2,6 +2,8 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from users.validators import is_only_letters
+
 
 class CustomUserManager(BaseUserManager):
     """Управление созданием пользователей"""
@@ -32,18 +34,19 @@ class CustomUser(AbstractUser):
 
     username = None
     email = models.EmailField(unique=True, verbose_name="Электронная почта")
+    first_name = models.CharField(max_length=50, validators=[is_only_letters], verbose_name="Имя")
+    last_name = models.CharField(max_length=50, validators=[is_only_letters], verbose_name="Фамилия")
+    patronymic = models.CharField(max_length=50, validators=[is_only_letters], verbose_name="Отчество")
     work_position = models.CharField(max_length=100, verbose_name="Должность")
     department = models.CharField(max_length=100, verbose_name="Отдел", blank=True, null=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = [
-        "work_position"
-    ]
+    REQUIRED_FIELDS = ["work_position", "name", "surname", "patronymic",]
 
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email
+        return f"{self.last_name} {self.first_name} {self.patronymic}"
 
     class Meta:
         verbose_name = "Пользователь"

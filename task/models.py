@@ -12,6 +12,7 @@ class Task(models.Model):
     STATUS_CHOICES = [
         ('created', 'Создана'),
         ('started', 'Запущена'),
+        ('overdue', 'Просрочена'),
         ('stoped', 'Завершена'),
     ]
 

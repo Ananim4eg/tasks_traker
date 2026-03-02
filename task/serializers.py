@@ -14,7 +14,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "task_manager",
             "parent",
             "executor",
-            "time_to_complete",
+            "date_to_complete",
             "status",
             "task_description",
             "created_at",
