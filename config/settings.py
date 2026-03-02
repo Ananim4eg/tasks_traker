@@ -8,7 +8,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "django-insecure-ehhdig73rjq%z_(wt=vl%pme#la#-9*esb76xl%vg*z=lmw#)^"
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = True if os.getenv('DEBUG') == 'True' else False
 
@@ -25,6 +25,7 @@ INSTALLED_APPS = [
 
     "rest_framework_simplejwt",
     "drf_yasg",
+    "users",
 ]
 
 MIDDLEWARE = [
