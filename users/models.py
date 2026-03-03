@@ -41,7 +41,7 @@ class CustomUser(AbstractUser):
     department = models.CharField(max_length=100, verbose_name="Отдел", blank=True, null=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["work_position", "name", "surname", "patronymic",]
+    REQUIRED_FIELDS = ["work_position", "first_name", "last_name", "patronymic",]
 
     objects = CustomUserManager()
 

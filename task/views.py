@@ -8,7 +8,6 @@ from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 
-
 from task.models import Task
 from task.paginators import CustomPagination
 from task.serializers import TaskSerializer
@@ -16,7 +15,6 @@ from task.serializers import TaskSerializer
 
 class TaskViewSet(viewsets.ModelViewSet):
     """Представление ViewSet для работы с задачами"""
-
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
     pagination_class = CustomPagination
@@ -34,29 +32,20 @@ class TaskViewSet(viewsets.ModelViewSet):
                 "title": openapi.Schema(
                     type=openapi.TYPE_STRING, description="Название задачи"
                 ),
-                "task_manager": openapi.Schema(
-                    type=openapi.TYPE_INTEGER, description="Постановщик задачи"
-                ),
                 "parent": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="Наследуемая задача"
+                    type=openapi.TYPE_INTEGER, description="Наследуемая задача"
                 ),
                 "executor": openapi.Schema(
-                    type=openapi.TYPE_INTEGER,
-                    description="Исполнитель",
+                    type=openapi.TYPE_INTEGER,description="Исполнитель",
                 ),
                 "days_to_complete": openapi.Schema(
                     type=openapi.TYPE_INTEGER, description="Кол-во дней для выполнения задания"
                 ),
-                "status": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Статус задачи",
-                ),
                 "task_description": openapi.Schema(
-                    type=openapi.TYPE_STRING,
-                    description="Описание задания",
+                    type=openapi.TYPE_STRING,description="Описание задания",
                 ),
             },
-            required=["title", "executor", "task_description"],
+            required=["title", "task_description"],
         ),
         responses={
             "201": openapi.Response(
@@ -69,10 +58,10 @@ class TaskViewSet(viewsets.ModelViewSet):
                         "task_manager": 3,
                         "parent": None,
                         "executor": 5,
-                        "date_to_complete": "2026-03-04T18:14:38.910300+03:00",
+                        "date_to_complete": "03-03-2026 00:13",
                         "status": "created",
                         "task_description": "Поставщик доставил товар на склад. Необходимо оприходовать его в системе.",
-                        "created_at": "2026-03-02T18:14:38.910300+03:00",
+                        "created_at": "03-03-2026 00:13",
                     }
                 },
             ),
@@ -99,7 +88,9 @@ class TaskViewSet(viewsets.ModelViewSet):
             self.permission_classes = [IsAuthenticated]
         return [permission() for permission in self.permission_classes]
 
+
     def perform_create(self, serializer):
+        """Подготовка данных для сериализатора при создании объекта"""
         days = serializer.validated_data.get('days_to_complete', 2)
 
         date_to_complete = timezone.now() + timedelta(days=days)
@@ -107,4 +98,17 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.save(task_manager=self.request.user,date_to_complete=date_to_complete)
 
     def perform_update(self, serializer):
-        serializer.save(task_manager=self.request.user)
+        """Подготовка данных для сериализатора при обновлении объекта"""
+        days = serializer.validated_data.pop('days_to_complete', 0)
+        status = self.get_object().status
+        executor = serializer.validated_data.get('executor')
+
+        if days != 0:
+            date_to_complete = timezone.now() + timedelta(days=days)
+        else:
+            date_to_complete = serializer.validated_data.get('date_to_complete')
+
+        if status == 'created' and executor:
+            status = 'started'
+
+        serializer.save(task_manager=self.request.user,date_to_complete=date_to_complete, status=status)

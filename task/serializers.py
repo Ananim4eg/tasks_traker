@@ -5,6 +5,19 @@ from task.models import Task
 
 class TaskSerializer(serializers.ModelSerializer):
     """Сериализатор для задач"""
+    days_to_complete = serializers.IntegerField(
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
+    created_at = serializers.DateTimeField(
+        format="%d-%m-%Y %H:%M",
+        read_only=True
+    )
+    date_to_complete = serializers.DateTimeField(
+        format="%d-%m-%Y %H:%M",
+        read_only=True
+    )
 
     class Meta:
         model = Task
@@ -14,8 +27,35 @@ class TaskSerializer(serializers.ModelSerializer):
             "task_manager",
             "parent",
             "executor",
+            "days_to_complete",
             "date_to_complete",
             "status",
             "task_description",
             "created_at",
         ]
+
+    def to_representation(self, instance):
+        """Преобразуем поля в читаемый вид"""
+        representation = super().to_representation(instance)
+
+        if instance.task_manager:
+            representation['task_manager'] = str(instance.task_manager)
+        else:
+            representation['task_manager'] = None
+
+        if instance.executor:
+            representation['executor'] = str(instance.executor)
+        else:
+            representation['executor'] = None
+
+        if instance.parent:
+            representation['parent'] = str(instance.parent)
+        else:
+            representation['parent'] = None
+
+        if instance.status:
+            representation['status'] = instance.get_status_display()
+        else:
+            representation['status'] = None
+
+        return representation

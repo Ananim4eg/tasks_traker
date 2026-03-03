@@ -1,7 +1,4 @@
-from datetime import timedelta
-
 from django.db import models
-from django.utils import timezone
 
 from users.models import CustomUser
 
@@ -38,25 +35,24 @@ class Task(models.Model):
     executor = models.ForeignKey(
         CustomUser,
         on_delete=models.SET_NULL,
+        blank=True,
         null=True,
         related_name="executor_task",
         verbose_name="Исполнитель"
     )
     days_to_complete = models.SmallIntegerField(
-        default=2,
         blank=True,
         null=True,
         verbose_name="Кол-во дней для выполнения задания"
     )
     date_to_complete = models.DateTimeField(
-        default= timezone.now() + timedelta(days=2),
         blank=True,
         null=True,
         verbose_name="Дата, до которой должна быть выполнена задача"
     )
     status = models.CharField(
         choices=STATUS_CHOICES,
-        default='started',
+        default='created',
         verbose_name="Статус задачи"
     )
     task_description = models.TextField(

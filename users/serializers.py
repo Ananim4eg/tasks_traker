@@ -37,3 +37,21 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop("confirm_password")
         user = CustomUser.objects.create_user(**validated_data)
         return user
+
+
+class CheckBuseEmployeeSerializer(serializers.ModelSerializer):
+    """Сериализатор для проверки занятости сотрудников"""
+
+    full_name = serializers.SerializerMethodField()
+    active_tasks_count = serializers.IntegerField(read_only=True)
+    active_tasks = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'work_position', 'full_name', 'active_tasks_count', 'active_tasks']
+
+    def get_full_name(self, obj):
+        return str(obj)
+
+    def get_active_tasks(self, obj):
+        return [str(task) for task in obj.active_tasks_list]
