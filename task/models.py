@@ -1,4 +1,5 @@
 from django.db import models
+from rest_framework.exceptions import ValidationError
 
 from users.models import CustomUser
 
@@ -30,6 +31,7 @@ class Task(models.Model):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
+        related_name='related_task',
         verbose_name="Наследуемая задача"
     )
     executor = models.ForeignKey(

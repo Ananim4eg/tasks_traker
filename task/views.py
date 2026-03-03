@@ -5,6 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 
@@ -92,23 +93,53 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Подготовка данных для сериализатора при создании объекта"""
         days = serializer.validated_data.get('days_to_complete', 2)
+        parent = serializer.validated_data.get('parent')
+        executor = serializer.validated_data.get('executor')
 
         date_to_complete = timezone.now() + timedelta(days=days)
 
-        serializer.save(task_manager=self.request.user,date_to_complete=date_to_complete)
+        if parent and parent.date_to_complete:
+            if date_to_complete > parent.date_to_complete:
+                raise ValidationError({
+                    'days_to_complete': (
+                        f"Срок выполнения ({parent.related_task}) не может быть "
+                        f"больше срока родительской задачи ({parent}) - {parent.date_to_complete}."
+                    )
+                })
+
+        if executor:
+            status = 'started'
+        else:
+            status = 'created'
+
+        serializer.save(task_manager=self.request.user, date_to_complete=date_to_complete, status=status)
 
     def perform_update(self, serializer):
         """Подготовка данных для сериализатора при обновлении объекта"""
+        instance = self.get_object()
+
         days = serializer.validated_data.pop('days_to_complete', 0)
-        status = self.get_object().status
+        parent = serializer.validated_data.get('parent', instance.parent)
+        status = instance.status
         executor = serializer.validated_data.get('executor')
 
         if days != 0:
             date_to_complete = timezone.now() + timedelta(days=days)
         else:
-            date_to_complete = serializer.validated_data.get('date_to_complete')
+            date_to_complete = serializer.validated_data.get(
+                'date_to_complete',
+                instance.date_to_complete
+            )
+
+        if parent and parent.date_to_complete < date_to_complete:
+            raise ValidationError({
+                'days_to_complete': (
+                    f"Срок выполнения ({instance}) превышает срок наследуемой задачи ({parent})"
+                    f" - {parent.date_to_complete.strftime("%d-%m-%Y %H:%M")}."
+                )
+            })
 
         if status == 'created' and executor:
             status = 'started'
 
-        serializer.save(task_manager=self.request.user,date_to_complete=date_to_complete, status=status)
+        serializer.save(task_manager=instance.task_manager, date_to_complete=date_to_complete, status=status)
