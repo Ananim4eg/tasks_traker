@@ -34,6 +34,28 @@ class TaskSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
+    def validate(self, data):
+        user = self.context['request'].user
+
+        if user.is_superuser:
+            return data
+
+        if user.has_perm('task.change_task'):
+            return data
+
+        if user.groups.filter(name='manager').exists():
+            if self.instance:
+                for field, value in data.items():
+                    old_value = getattr(self.instance, field)
+
+                    allowed_fields = ['title', 'executor', 'task_description', 'days_to_complete', 'date_to_complete']
+
+                    if field not in allowed_fields and value != old_value:
+                        raise serializers.ValidationError(
+                            f"У вас нет прав на изменение поля '{field}'"
+                        )
+        return data
+
     def to_representation(self, instance):
         """Преобразуем поля в читаемый вид"""
         representation = super().to_representation(instance)

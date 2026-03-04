@@ -31,6 +31,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "work_position",
             "password",
             "confirm_password",
+            "department",
         )
 
     def create(self, validated_data):
@@ -55,3 +56,34 @@ class CheckBuseEmployeeSerializer(serializers.ModelSerializer):
 
     def get_active_tasks(self, obj):
         return [str(task) for task in obj.active_tasks_list]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для чтения и обновления пользователя"""
+
+    def validate(self, data):
+        user = self.context['request'].user
+
+        if user.is_superuser:
+            return data
+
+        if user.has_perm('users.change_users'):
+            return data
+
+        if user.groups.filter(name='manager').exists():
+            if self.instance:
+                for field, value in data.items():
+                    old_value = getattr(self.instance, field)
+
+                    allowed_fields = ['work_position', 'department']
+
+                    if field not in allowed_fields and value != old_value:
+                        raise serializers.ValidationError(
+                            f"У вас нет прав на изменение поля '{field}'"
+                        )
+        return data
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'email', 'first_name', 'last_name', 'patronymic', 'work_position', 'department')
+        read_only_fields = ('id',)

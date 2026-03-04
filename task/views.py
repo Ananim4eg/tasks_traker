@@ -1,10 +1,11 @@
 from datetime import timedelta
 
+from django.db.models import Q
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
@@ -13,6 +14,7 @@ from rest_framework.views import APIView
 
 from task.models import Task
 from task.paginators import CustomPagination
+from task.permissions import IsTaskCreator, IsManager, IsTaskCreatorOrExecutor
 from task.serializers import TaskSerializer
 from task.services import get_important_tasks, get_employees_load, get_recommended_executor
 
@@ -77,19 +79,34 @@ class TaskViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
+    def get_queryset(self):
+        """Фильтрует задачи для текущего пользователя - создатель или исполнитель"""
+        user = self.request.user
+
+        queryset = Task.objects.all()
+
+        if self.action == 'list' and not user.groups.filter(name='manager').exists() and not user.is_superuser:
+            return queryset.filter(
+                Q(task_manager=user) | Q(executor=user)
+            ).distinct()
+
+        return queryset
+
     def get_permissions(self):
         if self.action == "list":
             self.permission_classes = [IsAuthenticated]
         elif self.action == "update":
-            self.permission_classes = [IsAuthenticated]
+            self.permission_classes = [IsAuthenticated, IsTaskCreator | IsManager]
         elif self.action == "partial_update":
-            self.permission_classes = [IsAuthenticated]
+            self.permission_classes = [IsAuthenticated, IsTaskCreator | IsManager]
         elif self.action == "retrieve":
-            self.permission_classes = [IsAuthenticated]
+            self.permission_classes = [IsAuthenticated, IsTaskCreatorOrExecutor | IsManager]
         elif self.action == "create":
             self.permission_classes = [IsAuthenticated]
         elif self.action == "destroy":
-            self.permission_classes = [IsAuthenticated]
+            self.permission_classes = [IsAuthenticated, IsTaskCreator]
+        if self.request.user.is_superuser:
+            return []
         return [permission() for permission in self.permission_classes]
 
 
@@ -146,11 +163,15 @@ class TaskViewSet(viewsets.ModelViewSet):
         if status == 'created' and executor:
             status = 'started'
 
+        if status == 'started' and not executor:
+            status = 'created'
+
         serializer.save(task_manager=instance.task_manager, date_to_complete=date_to_complete, status=status)
 
 
 class ImportantTaskView(APIView):
     """Представления для вывода важных задач"""
+    permission_classes = [IsAuthenticated, IsManager | permissions.IsAdminUser]
 
     def get(self, request):
         statuses = ["started", "overdue"]
