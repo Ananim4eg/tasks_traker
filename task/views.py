@@ -8,10 +8,13 @@ from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from task.models import Task
 from task.paginators import CustomPagination
 from task.serializers import TaskSerializer
+from task.services import get_important_tasks, get_employees_load, get_recommended_executor
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -103,7 +106,8 @@ class TaskViewSet(viewsets.ModelViewSet):
                 raise ValidationError({
                     'days_to_complete': (
                         f"Срок выполнения ({parent.related_task}) не может быть "
-                        f"больше срока родительской задачи ({parent}) - {parent.date_to_complete}."
+                        f"больше срока родительской задачи ({parent}) - "
+                        f"{parent.date_to_complete.strftime("%d-%m-%Y %H:%M")}."
                     )
                 })
 
@@ -143,3 +147,37 @@ class TaskViewSet(viewsets.ModelViewSet):
             status = 'started'
 
         serializer.save(task_manager=instance.task_manager, date_to_complete=date_to_complete, status=status)
+
+
+class ImportantTaskView(APIView):
+    """Представления для вывода важных задач"""
+
+    def get(self, request):
+        statuses = ["started", "overdue"]
+        ordering = request.query_params.get('ordering', 'date_to_complete')
+        validate_ordering = ['date_to_complete', '-date_to_complete']
+
+        if ordering not in validate_ordering:
+            ordering = 'date_to_complete'
+        # Получаем важные задачи
+        tasks = get_important_tasks(ordering, statuses)
+        # Получаем информацию о загруженности всех сотрудников
+        employees_load = get_employees_load(statuses)
+        # Отбираем первые 5 сотрудников у которых активных задач не более 2
+        first_five_least_loaded = employees_load.filter(active_tasks_count__lte=2)[:4]
+
+        result = []
+        for task in tasks:
+            #Получаем имя свободного сотрудника
+            recommended_executor_name = get_recommended_executor(task, first_five_least_loaded, employees_load)
+            result.append({
+                'task': task.title,
+                'date_to_complete': task.date_to_complete.strftime("%d-%m-%Y %H:%M"),
+                'executors': recommended_executor_name
+            })
+
+        return Response({
+            'count': len(result),
+            'ordering': ordering,
+            'results': result
+        })

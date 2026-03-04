@@ -1,12 +1,10 @@
-from django.db.models import Count, Q, Prefetch
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from task.models import Task
-from users.models import CustomUser
+from task.services import get_employees_load
 from users.serializers import UserRegistrationSerializer, CheckBuseEmployeeSerializer
 
 
@@ -69,20 +67,9 @@ class CheckBusyEmployeeView(APIView):
 
         if ordering not in validate_ordering:
             ordering = '-active_tasks_count'
-
-        employees =  CustomUser.objects.annotate(
-            active_tasks_count=Count(
-                'executor_task',
-                filter=Q(executor_task__status__in=statuses)
-            )
-        ).prefetch_related(
-            Prefetch(
-                'executor_task',
-                queryset=Task.objects.filter(status__in=statuses),
-                to_attr='active_tasks_list'
-            )
-        ).order_by(ordering)
-
+        # Получаем информацию о загруженности всех сотрудников
+        employees =  get_employees_load(statuses, ordering)
+        #Отправляем данные в сериализатор
         serializer = CheckBuseEmployeeSerializer(employees, many=True)
 
         return Response({
