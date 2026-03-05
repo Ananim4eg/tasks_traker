@@ -44,7 +44,15 @@ class RegisterView(APIView):
                     type=openapi.TYPE_STRING, description="Подразделение"
                 ),
             },
-            required=["email", "password", "confirm_password", "first_name", "last_name", "patronymic", "work_position"],
+            required=[
+                "email",
+                "password",
+                "confirm_password",
+                "first_name",
+                "last_name",
+                "patronymic",
+                "work_position"
+            ],
         ),
         responses={
             201: openapi.Response(description="Пользователь успешно зарегистрирован"),
@@ -52,7 +60,6 @@ class RegisterView(APIView):
         },
         tags=["register"],
     )
-
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -73,8 +80,8 @@ class CheckBusyEmployeeView(APIView):
         if ordering not in validate_ordering:
             ordering = '-active_tasks_count'
         # Получаем информацию о загруженности всех сотрудников
-        employees =  get_employees_load(statuses, ordering)
-        #Отправляем данные в сериализатор
+        employees = get_employees_load(statuses, ordering)
+        # Отправляем данные в серилизатор
         serializer = CheckBuseEmployeeSerializer(employees, many=True)
 
         return Response({
@@ -102,7 +109,7 @@ class UserUpdateView(UpdateAPIView):
     """Представление для обновления пользователя"""
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, IsOwner  | IsManager | permissions.IsAdminUser]
+    permission_classes = [IsAuthenticated, IsOwner | IsManager | permissions.IsAdminUser]
 
 
 class UserDeleteView(DestroyAPIView):

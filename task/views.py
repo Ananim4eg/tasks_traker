@@ -42,13 +42,13 @@ class TaskViewSet(viewsets.ModelViewSet):
                     type=openapi.TYPE_INTEGER, description="Наследуемая задача"
                 ),
                 "executor": openapi.Schema(
-                    type=openapi.TYPE_INTEGER,description="Исполнитель",
+                    type=openapi.TYPE_INTEGER, description="Исполнитель",
                 ),
                 "days_to_complete": openapi.Schema(
                     type=openapi.TYPE_INTEGER, description="Кол-во дней для выполнения задания"
                 ),
                 "task_description": openapi.Schema(
-                    type=openapi.TYPE_STRING,description="Описание задания",
+                    type=openapi.TYPE_STRING, description="Описание задания",
                 ),
             },
             required=["title", "task_description"],
@@ -65,8 +65,8 @@ class TaskViewSet(viewsets.ModelViewSet):
                         "parent": None,
                         "executor": 5,
                         "date_to_complete": "03-03-2026 00:13",
-                        "status": "created",
-                        "task_description": "Поставщик доставил товар на склад. Необходимо оприходовать его в системе.",
+                        "status": "started",
+                        "task_description": "Поставщик доставил товар на склад. Необходимо оприходовать его.",
                         "created_at": "03-03-2026 00:13",
                     }
                 },
@@ -108,7 +108,6 @@ class TaskViewSet(viewsets.ModelViewSet):
         if self.request.user.is_superuser:
             return []
         return [permission() for permission in self.permission_classes]
-
 
     def perform_create(self, serializer):
         """Подготовка данных для сериализатора при создании объекта"""
@@ -189,7 +188,7 @@ class ImportantTaskView(APIView):
 
         result = []
         for task in tasks:
-            #Получаем имя свободного сотрудника
+            # Получаем имя свободного сотрудника
             recommended_executor_name = get_recommended_executor(task, first_five_least_loaded, employees_load)
             result.append({
                 'task': task.title,

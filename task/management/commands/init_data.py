@@ -308,17 +308,17 @@ class Command(BaseCommand):
         self.stdout.write('=' * 50)
 
         # Статистика по группам
-        self.stdout.write(f'\nСТАТИСТИКА:')
+        self.stdout.write('\nСТАТИСТИКА:')
         self.stdout.write(f'  • Группа "Manager": {manager_group.permissions.count()} прав')
 
         # Статистика по пользователям
-        self.stdout.write(f'\nПОЛЬЗОВАТЕЛИ:')
+        self.stdout.write('\nПОЛЬЗОВАТЕЛИ:')
         self.stdout.write(f'  • Всего: {CustomUser.objects.count()}')
         self.stdout.write(f'  • Суперпользователи: {CustomUser.objects.filter(is_superuser=True).count()}')
         self.stdout.write(f'  • Менеджеры: {CustomUser.objects.filter(groups=manager_group).count()}')
 
         # Статистика по задачам
-        self.stdout.write(f'\nЗАДАЧИ:')
+        self.stdout.write('\nЗАДАЧИ:')
         self.stdout.write(f'  • Всего: {Task.objects.count()}')
         self.stdout.write(f'  • Созданы: {Task.objects.filter(status="created").count()}')
         self.stdout.write(f'  • В работе: {Task.objects.filter(status="started").count()}')

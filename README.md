@@ -9,3 +9,9 @@ python manage.py init_data --clear
 
 # Комбинация параметров
 python manage.py init_data --users-count 8 --tasks-count 15 --clear
+
+# Оставить суперпользователя
+python manage.py reset_data
+
+# Удалить суперпользователя
+python manage.py reset_data --delete-superuser
