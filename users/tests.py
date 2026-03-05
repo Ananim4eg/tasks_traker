@@ -1,5 +1,3 @@
-import json
-
 from django.contrib.auth.models import Group
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -89,21 +87,21 @@ class UsersTestCase(APITestCase):
         url = reverse("users:user_delete", args=(self.user.pk,))
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json()['detail'], 'You do not have permission to perform this action.')
+        self.assertEqual(response.json()['detail'], 'У вас недостаточно прав для выполнения данного действия.')
 
     def test_user_list(self):
         self.client.force_authenticate(user=self.user)
         url = reverse('users:user_list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json()['detail'], 'You do not have permission to perform this action.')
+        self.assertEqual(response.json()['detail'], 'У вас недостаточно прав для выполнения данного действия.')
 
     def test_user_get_busy_employees(self):
         self.client.force_authenticate(user=self.user)
         url = reverse('users:busy-employees')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json()['detail'], 'You do not have permission to perform this action.')
+        self.assertEqual(response.json()['detail'], 'У вас недостаточно прав для выполнения данного действия.')
 
     def test_manage_update_user(self):
         self.client.force_authenticate(user=self.manager)
@@ -168,7 +166,7 @@ class UsersTestCase(APITestCase):
         url = reverse("users:user_delete", args=(self.user.pk,))
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.json()['detail'], 'You do not have permission to perform this action.')
+        self.assertEqual(response.json()['detail'], 'У вас недостаточно прав для выполнения данного действия.')
 
     def test_manager_get_busy_employees(self):
         self.client.force_authenticate(user=self.manager)

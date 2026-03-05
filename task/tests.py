@@ -1,4 +1,3 @@
-import json
 from datetime import timedelta
 
 from django.contrib.auth.models import Group
@@ -131,7 +130,7 @@ class TaskTestCase(APITestCase):
         response = self.client.get(url)
         data = response.json()
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(data['detail'], 'You do not have permission to perform this action.')
+        self.assertEqual(data['detail'], 'У вас недостаточно прав для выполнения данного действия.')
 
     def test_important_tasks_manager(self):
         self.client.force_authenticate(user=self.manager)
@@ -174,7 +173,6 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.task_test = Task.objects.get(title='Проверка')
-
 
         time_create = self.task_test.created_at
         time_complete = timedelta(days=self.task_test.days_to_complete)
