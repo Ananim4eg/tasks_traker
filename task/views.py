@@ -71,8 +71,36 @@ class TaskViewSet(viewsets.ModelViewSet):
                     }
                 },
             ),
-            "400": "Ошибки валидации",
-            "401": "Не авторизован",
+            "400": openapi.Response(
+                description="Bad request",
+                examples={
+                    "application/json": {
+                        "parent": [
+                            "Недопустимый первичный ключ \"10\" - объект не существует.",
+                        ]
+                    }
+                }
+            ),
+            "401": openapi.Response(
+                description="Unauthorized",
+                examples={
+                    "application/json (Не авторизован)": {
+                        "detail": "Учетные данные не были предоставлены."
+                    },
+                    "application/json (Недействительный токен)": {
+                        "detail": "Данный токен недействителен для любого типа токена",
+                        "code": "token_not_valid",
+                        "messages": [
+                            {
+                                "token_class": "AccessToken",
+                                "token_type": "access",
+                                "message": "Token is expired"
+                            }
+                        ]
+                    },
+                },
+
+            )
         },
         tags=["task"],
     )
@@ -172,6 +200,42 @@ class ImportantTaskView(APIView):
     """Представления для вывода важных задач"""
     permission_classes = [IsAuthenticated, IsManager | permissions.IsAdminUser]
 
+    @swagger_auto_schema(
+        operation_description="Важные задачи",
+        operation_summary="important_task",
+        responses={
+            "200": openapi.Response(
+                description="OK",
+                schema=TaskSerializer,
+                examples={
+                    "application/json": {
+                        "count": 1,
+                        "ordering": "date_to_complete",
+                        "results": [
+                            {
+                                "task": "Провести рефакторинг",
+                                "date_to_complete": "21-02-2026 11:46",
+                                "executors": [
+                                    "Смирнов Сидор Иванович",
+                                    "Петров Сидор Александрович",
+                                    "Соколов Олег Сидорович"
+                                ]
+                            }
+                        ]
+                    }
+                },
+            ),
+            "401": openapi.Response(
+                description="Учетные данные не были предоставлены.",
+                examples={
+                    "application/json": {
+                        "detail": "Учетные данные не были предоставлены."
+                    }
+                }
+            ),
+        },
+        tags=["important_task"],
+    )
     def get(self, request):
         statuses = ["started", "overdue"]
         ordering = request.query_params.get('ordering', 'date_to_complete')

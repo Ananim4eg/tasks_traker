@@ -6,6 +6,7 @@ from users.models import CustomUser
 
 
 class Command(BaseCommand):
+    """Кастомная команда для очистки программы от данных, может оставлять суперпользователя."""
     def add_arguments(self, parser):
         parser.add_argument(
             '--delete-superuser',

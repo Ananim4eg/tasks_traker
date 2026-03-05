@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 
 from task.models import Task
 
@@ -56,6 +57,15 @@ class TaskSerializer(serializers.ModelSerializer):
                         )
         return data
 
+    def get_parent_url(self, obj):
+        if obj.parent:
+            request = self.context.get('request')
+            if request is not None:
+                return request.build_absolute_uri(
+                    reverse('task:task-detail', args=[obj.parent.id])
+                )
+        return None
+
     def to_representation(self, instance):
         """Преобразуем поля в читаемый вид"""
         representation = super().to_representation(instance)
@@ -71,7 +81,7 @@ class TaskSerializer(serializers.ModelSerializer):
             representation['executor'] = None
 
         if instance.parent:
-            representation['parent'] = str(instance.parent)
+            representation['parent'] = f'{str(instance.parent)} - {self.get_parent_url(instance)}'
         else:
             representation['parent'] = None
 

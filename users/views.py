@@ -55,8 +55,25 @@ class RegisterView(APIView):
             ],
         ),
         responses={
-            201: openapi.Response(description="Пользователь успешно зарегистрирован"),
-            400: "Ошибка валидации данных",
+            201: openapi.Response(description="Пользователь успешно зарегистрирован",
+                                  examples={
+                                      "application/json": {
+                                          "detail": "Пользователь успешно зарегистрирован"
+                                      }
+                                  }
+                                  ),
+            400: openapi.Response(description="Bad Request",
+                                  examples={
+                                      "application/json": {
+                                          "email": [
+                                              "Пользователь с таким Электронная почта уже существует."
+                                          ],
+                                          "first_name": [
+                                              "Поле может содержать только буквы"
+                                          ]
+                                      }
+                                  }
+                                  ),
         },
         tags=["register"],
     )
@@ -64,7 +81,7 @@ class RegisterView(APIView):
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response("Пользователь успешно зарегистрирован", status=status.HTTP_201_CREATED)
+            return Response({"detail": "Пользователь успешно зарегистрирован"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -72,6 +89,63 @@ class CheckBusyEmployeeView(APIView):
     """Представление для вывода информации о загруженности сотрудников"""
     permission_classes = [IsAuthenticated, IsManager | permissions.IsAdminUser]
 
+    @swagger_auto_schema(
+        operation_description="Загруженость сотрудников",
+        operation_summary="busy_employees",
+        manual_parameters=[
+            openapi.Parameter(
+                'ordering',
+                openapi.IN_QUERY,
+                description="Сортировка по количеству задач",
+                type=openapi.TYPE_STRING,
+                enum=['active_tasks_count', '-active_tasks_count'],
+                default='-active_tasks_count'
+            ),
+        ],
+        responses={
+            "200": openapi.Response(
+                description="OK",
+                schema=CheckBuseEmployeeSerializer,
+                examples={
+                    "ordering": "-active_tasks_count",
+                    "count": 11,
+                    "results": [
+                        {
+                            "id": 118,
+                            "work_position": "Дизайнер",
+                            "full_name": "Петров Дмитрий Павлович",
+                            "active_tasks_count": 4,
+                            "active_tasks": [
+                                "Разработать API",
+                                "Провести рефакторинг",
+                                "Создать макеты",
+                                "Создать макеты"
+                            ]
+                        },
+                        {
+                            "id": 117,
+                            "work_position": "Тестировщик",
+                            "full_name": "Смирнов Дмитрий Иванович",
+                            "active_tasks_count": 2,
+                            "active_tasks": [
+                                "Исправить баги",
+                                "Провести встречу"
+                            ]
+                        },
+                    ]
+                }
+            ),
+            "401": openapi.Response(
+                description="Учетные данные не были предоставлены.",
+                examples={
+                    "application/json": {
+                        "detail": "Учетные данные не были предоставлены."
+                    }
+                }
+            ),
+        },
+        tags=["busy_employees"],
+    )
     def get(self, request):
         statuses = ["started", "overdue"]
         ordering = request.query_params.get('ordering', '-active_tasks_count')
